@@ -1,0 +1,14 @@
+mqtt:
+  enabled: false
+
+cameras:
+  nursery:
+    ffmpeg:
+      inputs:
+        - path: rtsp://USERNAME:PASSWORD@CAMERA_IP:554/stream
+          roles:
+            - detect
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
