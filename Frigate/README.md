@@ -1,83 +1,197 @@
-<p align="center">
-  <img align="center" alt="logo" src="docs/static/img/branding/frigate.png">
-</p>
+# Frigate NVR – Docker Compose Deployment
 
-# Frigate NVR™ - Realtime Object Detection for IP Cameras
+A structured and self-contained Docker Compose setup for deploying **Frigate NVR** in a self-hosted environment.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-<a href="https://hosted.weblate.org/engage/frigate-nvr/">
-<img src="https://hosted.weblate.org/widget/frigate-nvr/language-badge.svg" alt="Translation status" />
-</a>
-
-\[English\] | [简体中文](https://github.com/blakeblackshear/frigate/blob/dev/README_CN.md)
-
-A complete and local NVR designed for [Home Assistant](https://www.home-assistant.io) with AI object detection. Uses OpenCV and Tensorflow to perform realtime object detection locally for IP cameras.
-
-Use of a GPU or AI accelerator is highly recommended. AI accelerators will outperform even the best CPUs with very little overhead. See Frigate's supported [object detectors](https://docs.frigate.video/configuration/object_detectors/).
-
-- Tight integration with Home Assistant via a [custom component](https://github.com/blakeblackshear/frigate-hass-integration)
-- Designed to minimize resource use and maximize performance by only looking for objects when and where it is necessary
-- Leverages multiprocessing heavily with an emphasis on realtime over processing every frame
-- Uses a very low overhead motion detection to determine where to run object detection
-- Object detection with TensorFlow runs in separate processes for maximum FPS
-- Communicates over MQTT for easy integration into other systems
-- Records video with retention settings based on detected objects
-- 24/7 recording
-- Re-streaming via RTSP to reduce the number of connections to your camera
-- WebRTC & MSE support for low-latency live view
-
-## Documentation
-
-View the documentation at https://docs.frigate.video
-
-## Donations
-
-If you would like to make a donation to support development, please use [Github Sponsors](https://github.com/sponsors/blakeblackshear).
-
-## License
-
-This project is licensed under the **MIT License**.
-
-- **Code:** The source code, configuration files, and documentation in this repository are available under the [MIT License](LICENSE). You are free to use, modify, and distribute the code as long as you include the original copyright notice.
-- **Trademarks:** The "Frigate" name, the "Frigate NVR" brand, and the Frigate logo are **trademarks of Frigate, Inc.** and are **not** covered by the MIT License.
-
-Please see our [Trademark Policy](TRADEMARK.md) for details on acceptable use of our brand assets.
-
-## Screenshots
-
-### Live dashboard
-
-<div>
-<img width="800" alt="Live dashboard" src="https://github.com/blakeblackshear/frigate/assets/569905/5e713cb9-9db5-41dc-947a-6937c3bc376e">
-</div>
-
-### Streamlined review workflow
-
-<div>
-<img width="800" alt="Streamlined review workflow" src="https://github.com/blakeblackshear/frigate/assets/569905/6fed96e8-3b18-40e5-9ddc-31e6f3c9f2ff">
-</div>
-
-### Multi-camera scrubbing
-
-<div>
-<img width="800" alt="Multi-camera scrubbing" src="https://github.com/blakeblackshear/frigate/assets/569905/d6788a15-0eeb-4427-a8d4-80b93cae3d74">
-</div>
-
-### Built-in mask and zone editor
-
-<div>
-<img width="800" alt="Built-in mask and zone editor" src="https://github.com/blakeblackshear/frigate/assets/569905/d7885fc3-bfe6-452f-b7d0-d957cb3e31f5">
-</div>
-
-## Translations
-
-We use [Weblate](https://hosted.weblate.org/projects/frigate-nvr/) to support language translations. Contributions are always welcome.
-
-<a href="https://hosted.weblate.org/engage/frigate-nvr/">
-<img src="https://hosted.weblate.org/widget/frigate-nvr/multi-auto.svg" alt="Translation status" />
-</a>
+This repository focuses on clean deployment, maintainable configuration, and production-ready structure — without unnecessary complexity.
 
 ---
 
-**Copyright © 2026 Frigate, Inc.**
+## 📦 Overview
+
+Frigate is a local Network Video Recorder (NVR) designed for real-time object detection using IP cameras.
+
+This repository provides:
+- Organized Docker Compose configuration
+- Structured config directory
+- Easy customization for home or lab environments
+- Clean deployment workflow
+
+---
+
+## 📁 Project Structure
+
+```
+Frigate/
+├── Docker-compose.yml
+├── config/
+│   └── config.yml
+└── README.md
+```
+
+---
+
+## 🚀 Requirements
+
+Before deployment, ensure the following are installed:
+
+- Docker (latest stable recommended)
+- Docker Compose
+- Linux host system (recommended for stability)
+- IP Camera with RTSP stream
+
+Optional (recommended for performance):
+- NVIDIA GPU
+- Google Coral TPU
+- Other supported hardware accelerators
+
+---
+
+## ⚙️ Configuration
+
+### 1️⃣ Edit Docker Compose
+
+Open:
+
+```
+Docker-compose.yml
+```
+
+Adjust:
+- Port mappings
+- Storage paths
+- Environment variables
+- Shared memory size (shm_size)
+
+If running multiple cameras, increase shared memory accordingly.
+
+---
+
+### 2️⃣ Configure Cameras
+
+Open:
+
+```
+config/config.yml
+```
+
+Define:
+- RTSP stream URLs
+- Detection resolution
+- Frames per second
+- Recording behavior
+
+Make sure to:
+- Replace placeholder usernames/passwords
+- Verify camera stream accessibility
+
+---
+
+## ▶️ Deploy Frigate
+
+From inside the `Frigate` directory:
+
+```bash
+docker compose up -d
+```
+
+To monitor logs:
+
+```bash
+docker compose logs -f
+```
+
+To stop the service:
+
+```bash
+docker compose down
+```
+
+---
+
+## 🌐 Access Web Interface
+
+After deployment, open:
+
+```
+http://YOUR_SERVER_IP:PORT
+```
+
+Replace:
+- `YOUR_SERVER_IP` with your server address
+- `PORT` with the port defined in Docker Compose
+
+---
+
+## 📊 Performance Notes
+
+- Increase `shm_size` if you experience crashes.
+- Use hardware acceleration for better detection speed.
+- Store recordings on fast storage (SSD recommended).
+- Keep your camera FPS reasonable (5–10 FPS for detection is usually sufficient).
+
+---
+
+## 🔐 Environment Variables (Optional)
+
+For better security and maintainability, consider using a `.env` file:
+
+Example:
+
+```
+FRIGATE_RTSP_PASSWORD=your_password_here
+```
+
+Then reference it inside `Docker-compose.yml`.
+
+---
+
+## 🛠 Troubleshooting
+
+If the container fails to start:
+
+1. Check logs:
+   ```bash
+   docker compose logs
+   ```
+2. Validate YAML indentation
+3. Confirm storage paths exist
+4. Ensure ports are not already in use
+
+---
+
+## 🔄 Updating
+
+To update Frigate:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+---
+
+## 🤝 Contributions
+
+Contributions, improvements, and suggestions are welcome.
+
+If you fork this repository:
+1. Create a new branch
+2. Make changes
+3. Submit a Pull Request
+
+---
+
+## 📄 License
+
+Add your preferred license (e.g., MIT License) to define usage rights and redistribution rules.
+
+---
+
+## ⚠️ Disclaimer
+
+This repository provides deployment configuration only.  
+Ensure compliance with local regulations regarding camera recording and data retention.
+
+---
+
+**Maintained by Ilham**
