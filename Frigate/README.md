@@ -1,59 +1,59 @@
 # Frigate NVR - Docker Compose
 
-Setup Frigate NVR + Mosquitto (MQTT) yang dipakai di server produksi. Semua kredensial di repo ini adalah dummy, ganti sebelum dipakai.
+Frigate NVR + Mosquitto (MQTT) setup as used on a production server. All credentials in this repo are placeholders; replace them before deploying.
 
-## Struktur
+## Structure
 
 ```
 Frigate/
-├── docker-compose.yml        # service frigate + mosquitto
+├── docker-compose.yml        # frigate + mosquitto services
 ├── config/
-│   └── config.yml            # konfigurasi Frigate (10 kamera, go2rtc restream)
+│   └── config.yml            # Frigate config (10 cameras, go2rtc restream)
 ├── mqtt/
 │   └── config/
 │       └── mosquitto.conf
 └── README.md
 ```
 
-Folder `storage/` (rekaman) dan file runtime di `config/` (database, `.jwt_secret`, `model_cache/`) dibuat otomatis oleh Frigate saat pertama jalan dan tidak di-commit.
+The `storage/` folder (recordings) and runtime files in `config/` (database, `.jwt_secret`, `model_cache/`) are created by Frigate on first start and are not committed.
 
-## Kebutuhan
+## Requirements
 
-- Docker Engine + Docker Compose v2 (`docker compose`). Panduan instalasi: [../README.md](../README.md)
+- Docker Engine + Docker Compose v2 (`docker compose`). Install guide: [../README.md](../README.md)
 - Linux host
-- IP camera dengan RTSP (config ini memakai path Hikvision `/Streaming/Channels/101`)
-- Opsional: iGPU Intel (`/dev/dri`) untuk hwaccel. Hapus bagian `devices` di compose kalau tidak ada.
+- IP cameras with RTSP (this config uses the Hikvision path `/Streaming/Channels/101`)
+- Optional: Intel iGPU (`/dev/dri`) for hwaccel. Remove the `devices` section in the compose file if you don't have one.
 
-## Yang harus diganti
+## What to change
 
 ### config/config.yml
 
-Di bagian `go2rtc.streams`, ganti tiap URL kamera:
+Under `go2rtc.streams`, replace each camera URL:
 
 ```
 rtsp://USERNAME:PASSWORD@CAMERA_1_IP:554/Streaming/Channels/101
 ```
 
-menjadi username, password, dan IP kamera masing-masing. Kalau password mengandung karakter khusus (`@`, `:`, `/`, `#`), encode dulu (misal `@` jadi `%40`).
+with that camera's username, password and IP. If a password contains special characters (`@`, `:`, `/`, `#`), URL-encode them (e.g. `@` becomes `%40`).
 
-Sesuaikan juga sesuai kebutuhan:
-- daftar kamera di `cameras`, `camera_groups`, dan `auth.roles`
-- `detect` (resolusi/fps)
-- `record` (retensi, default 30 hari)
+Adjust as needed:
+- camera list in `cameras`, `camera_groups` and `auth.roles`
+- `detect` (resolution/fps)
+- `record` (retention, 30 days by default)
 
-`auth.reset_admin_password: true` membuat password admin di-reset setiap container restart dan password baru ditampilkan di log. Setelah login pertama dan ganti password, ubah ke `false`.
+`auth.reset_admin_password: true` resets the admin password on every container restart and prints the new one in the logs. Set it to `false` after your first login and password change.
 
 ### docker-compose.yml
 
-- `FRIGATE_RTSP_PASSWORD`: ganti dari nilai dummy
-- `shm_size`: naikkan kalau kamera banyak / resolusi tinggi
-- port: `8971` web UI (HTTPS, dengan login), `8554` RTSP restream, `8555` WebRTC. Port `5000` (tanpa auth) sengaja dimatikan.
+- `FRIGATE_RTSP_PASSWORD`: replace the placeholder value
+- `shm_size`: increase for many cameras / high resolution
+- ports: `8971` web UI (HTTPS, with login), `8554` RTSP restream, `8555` WebRTC. Port `5000` (no auth) is disabled on purpose.
 
 ### mqtt/config/mosquitto.conf
 
-Default `allow_anonymous true`. Kalau port 1883 terbuka ke luar jaringan lokal, aktifkan autentikasi atau jangan expose port-nya.
+Defaults to `allow_anonymous true`. If port 1883 is reachable from outside your local network, enable authentication or don't expose the port.
 
-## Menjalankan
+## Run
 
 ```bash
 cd Frigate
@@ -62,7 +62,7 @@ docker compose up -d
 docker compose logs -f frigate
 ```
 
-Ambil password admin awal dari log, lalu buka `https://IP_SERVER:8971`.
+Get the initial admin password from the logs, then open `https://SERVER_IP:8971`.
 
 ## Update
 
@@ -71,11 +71,11 @@ docker compose pull
 docker compose up -d
 ```
 
-Image memakai tag `stable`, jadi pull bisa menaikkan versi mayor Frigate. Backup folder `config/` sebelum update dan cek release notes Frigate untuk perubahan config.
+The image uses the `stable` tag, so a pull can bring a new major Frigate version. Back up `config/` before updating and check the Frigate release notes for config changes.
 
 ## Troubleshooting
 
-- `docker compose logs frigate` untuk melihat error
-- Cek indentasi YAML
-- Pastikan stream kamera bisa dibuka (misal pakai VLC) dengan URL RTSP yang sama
-- Pastikan port tidak bentrok dengan service lain
+- `docker compose logs frigate` to see errors
+- Check YAML indentation
+- Make sure the camera stream opens (e.g. in VLC) with the same RTSP URL
+- Make sure the ports don't conflict with other services

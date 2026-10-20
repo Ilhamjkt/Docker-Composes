@@ -1,4 +1,4 @@
-# data runtime, jangan di-commit
+# runtime data, do not commit
 storage/
 mqtt/data/
 mqtt/log/

@@ -3,10 +3,10 @@ services:
     container_name: frigate
     image: ghcr.io/blakeblackshear/frigate:stable
     restart: unless-stopped
-    privileged: true          # perlu untuk akses hardware (GPU/Coral); bisa dilepas kalau tidak pakai HW accel
-    shm_size: "256mb"         # naikkan kalau kamera banyak/resolusi tinggi
+    privileged: true          # needed for hardware access (GPU/Coral); can be removed if not using HW accel
+    shm_size: "256mb"         # increase for many cameras / high resolution
     devices:
-      - /dev/dri:/dev/dri     # kalau ada iGPU Intel untuk hwaccel, hapus kalau tidak ada
+      - /dev/dri:/dev/dri     # Intel iGPU for hwaccel, remove if not available
     volumes:
       - ./config:/config
       - ./storage:/media/frigate
@@ -22,7 +22,7 @@ services:
       - "8555:8555/tcp"
       - "8555:8555/udp" # WebRTC
     environment:
-      FRIGATE_RTSP_PASSWORD: "ganti_password_rtsp"
+      FRIGATE_RTSP_PASSWORD: "change_me"
 
   mqtt:
     container_name: mosquitto
