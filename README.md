@@ -1,119 +1,249 @@
 # Docker Installation Guide
 
-⚠️ **Warning**: This guide assumes you're using **root** privileges. Use at your own risk.
+Install **Docker Engine** and the **Docker Compose plugin** (`docker compose`) from Docker's official repositories, then use the compose files in this repo.
+
+⚠️ **Warning**: Commands below assume you are **root**. If you are not, prefix them with `sudo` (or run `sudo -i` first).
 
 ---
 
 ## Quick Start
 
-Install Docker Engine and Docker Compose plugin with a single command:
+Docker's convenience script detects your distro and installs Docker Engine + Compose plugin:
 
 ```bash
-curl -sSL get.docker.com | sh
+curl -fsSL https://get.docker.com | sh
+systemctl enable --now docker
 ```
+
+> Docker recommends the script for test/dev machines. For servers, use the per-distro steps below so you control the repository and versions.
 
 ---
 
 ## Detailed Installation Instructions
 
-### Debian / Ubuntu
+Supported: Debian, Ubuntu (and derivatives like Mint/Pop!_OS), RHEL / Rocky / Alma, CentOS Stream, Fedora.
 
-#### 1. Update and Install Dependencies
+### Debian
+
+#### 1. Remove conflicting packages
+
+```bash
+apt remove $(dpkg --get-selections docker.io docker-compose docker-doc docker-buildx podman-docker containerd runc | cut -f1)
+```
+
+`apt` may report that none of these are installed — that's fine.
+
+#### 2. Add Docker GPG key
 
 ```bash
 apt update
-apt install ca-certificates curl
-```
-
-#### 2. Add Docker GPG Key
-
-```bash
-sudo install -m 0755 -d /etc/apt/keyrings
+apt install -y ca-certificates curl
+install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 chmod a+r /etc/apt/keyrings/docker.asc
 ```
 
-#### 3. Add Docker Repository
+#### 3. Add Docker repository
 
 ```bash
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update
+tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+apt update
 ```
 
 #### 4. Install Docker
 
 ```bash
-apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl enable --now docker
 ```
 
 ---
 
-### RHEL / Alma / Rocky / CentOS
+### Ubuntu
 
-#### 1. Install Required Tools
+Same as Debian, but with the **Ubuntu** repository (do not use the Debian repo on Ubuntu).
+
+#### 1. Remove conflicting packages
 
 ```bash
-yum install -y yum-utils
+apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc docker-buildx podman-docker containerd runc | cut -f1)
 ```
 
-#### 2. Add Docker Repository
+#### 2. Add Docker GPG key
 
 ```bash
-yum-config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+apt update
+apt install -y ca-certificates curl
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+```
+
+#### 3. Add Docker repository
+
+```bash
+tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+apt update
+```
+
+`UBUNTU_CODENAME` makes this work on Ubuntu derivatives (Linux Mint, Pop!_OS) too.
+
+#### 4. Install Docker
+
+```bash
+apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl enable --now docker
+```
+
+---
+
+### RHEL / Rocky / Alma
+
+#### 1. Remove conflicting packages
+
+```bash
+dnf remove docker docker-client docker-client-latest docker-common docker-latest \
+  docker-latest-logrotate docker-logrotate docker-engine podman runc
+```
+
+#### 2. Add Docker repository
+
+```bash
+dnf -y install dnf-plugins-core
+dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
 ```
 
 #### 3. Install Docker
 
 ```bash
-yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-#### 4. Start and Enable Docker
+Accept the GPG key if prompted; its fingerprint must be `060A 61C5 1B55 8A7F 742B 77AA C52F EB6B 621E 9F35`.
+
+#### 4. Start and enable Docker
 
 ```bash
-systemctl enable docker && systemctl start docker
+systemctl enable --now docker
+```
+
+---
+
+### CentOS Stream
+
+Same as RHEL, but with the **CentOS** repository:
+
+```bash
+dnf remove docker docker-client docker-client-latest docker-common docker-latest \
+  docker-latest-logrotate docker-logrotate docker-engine
+dnf -y install dnf-plugins-core
+dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl enable --now docker
 ```
 
 ---
 
 ### Fedora
 
-#### 1. Install Required Tools
+Fedora 41+ ships **dnf5**, whose `config-manager` syntax differs from older releases.
+
+#### 1. Remove conflicting packages
+
+```bash
+dnf remove docker docker-client docker-client-latest docker-common docker-latest \
+  docker-latest-logrotate docker-logrotate docker-selinux docker-engine-selinux docker-engine
+```
+
+#### 2. Add Docker repository
 
 ```bash
 dnf -y install dnf-plugins-core
+dnf config-manager addrepo --from-repofile https://download.docker.com/linux/fedora/docker-ce.repo
 ```
 
-#### 2. Add Docker Repository
-
-```bash
-dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
-```
+On Fedora 40 and older (dnf4) use: `dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo`
 
 #### 3. Install Docker
 
 ```bash
-dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-#### 4. Start and Enable Docker
+#### 4. Start and enable Docker
 
 ```bash
-systemctl enable docker && systemctl start docker
+systemctl enable --now docker
 ```
 
 ---
 
 ## Verification
 
-After installation, verify Docker is working properly:
-
 ```bash
 docker --version
 docker compose version
+docker run --rm hello-world
+```
+
+`hello-world` printing "Hello from Docker!" means the engine can pull and run containers.
+
+> **Docker Compose v1 vs v2**: this guide installs Compose **v2** as a Docker plugin, used as `docker compose` (space). The old standalone `docker-compose` (hyphen, v1) is deprecated — don't install it, and use `docker compose` in every command.
+
+---
+
+## Running Docker as a non-root user
+
+```bash
+usermod -aG docker <username>
+# log out and back in (or run: newgrp docker)
+docker run --rm hello-world
+```
+
+⚠️ Members of the `docker` group effectively have **root access** to the host. Only add users you trust.
+
+---
+
+## Updating Docker
+
+```bash
+# Debian / Ubuntu
+apt update && apt install --only-upgrade -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# RHEL / Rocky / Alma / CentOS Stream / Fedora
+dnf upgrade -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+Running containers with `restart: unless-stopped` start again automatically after the engine restarts.
+
+---
+
+## Uninstalling Docker
+
+```bash
+# Debian / Ubuntu
+apt purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
+rm /etc/apt/sources.list.d/docker.sources /etc/apt/keyrings/docker.asc
+
+# RHEL / Rocky / Alma / CentOS Stream / Fedora
+dnf remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
+
+# Delete ALL images, containers, and volumes (irreversible)
+rm -rf /var/lib/docker /var/lib/containerd
 ```
 
 ---
@@ -162,6 +292,9 @@ docker compose restart
 
 # Rebuild and start
 docker compose up -d --build
+
+# Pull newer images and recreate containers
+docker compose pull && docker compose up -d
 ```
 
 ---
@@ -184,21 +317,21 @@ services:
 
 ## Troubleshooting
 
-### Permission Denied
+### Permission denied on `/var/run/docker.sock`
 
-```bash
-# Add user to docker group
-sudo usermod -aG docker $USER
-# Logout and login again
-```
+Your user is not in the `docker` group — see [Running Docker as a non-root user](#running-docker-as-a-non-root-user).
 
-### Check Docker Status
+### `docker: 'compose' is not a docker command`
+
+The Compose plugin is missing. Install `docker-compose-plugin` with your package manager (step 4 of your distro).
+
+### Check Docker status
 
 ```bash
 systemctl status docker
 ```
 
-### View Docker Logs
+### View Docker logs
 
 ```bash
 journalctl -u docker.service
@@ -206,13 +339,10 @@ journalctl -u docker.service
 
 ---
 
-> **Tip**: For non-root usage, add your user to the docker group: `sudo usermod -aG docker $USER` then logout and login again.
-
----
-
 ## References
 
-- [Docker Documentation](https://docs.docker.com/)
+- [Install Docker Engine](https://docs.docker.com/engine/install/)
+- [Linux post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 
 ---

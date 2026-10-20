@@ -34,8 +34,11 @@ Frigate/
 
 Before deployment, ensure the following are installed:
 
-- Docker (latest stable recommended)
-- Docker Compose
+- Docker Engine (latest stable recommended)
+- Docker Compose v2 plugin (`docker compose`, not the deprecated `docker-compose`)
+
+See the [Docker installation guide](../README.md) for Debian, Ubuntu, RHEL/Rocky/Alma, CentOS Stream, and Fedora.
+
 - Linux host system (recommended for stability)
 - IP Camera with RTSP stream
 
