@@ -3,7 +3,7 @@ auth:
   reset_admin_password: true
 
   roles:
-    Cloudc:
+    Site-A:
       - Camera-1
       - Camera-2
       - Camera-3
@@ -227,7 +227,7 @@ record:
       mode: motion
 
 camera_groups:
-  ClouDC:
+  Site-A:
     order: 1
     icon: LuCctv
     cameras:
@@ -239,7 +239,7 @@ camera_groups:
       - Camera-8
       - Camera-9
       - Camera-10
-  Raudha:
+  Site-B:
     order: 1
     icon: LuCctv
     cameras:
