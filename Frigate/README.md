@@ -6,13 +6,13 @@ Frigate NVR + Mosquitto (MQTT) setup as used on a production server. All credent
 
 ```
 Frigate/
-├── docker-compose.yml        # frigate + mosquitto services
-├── config/
-│   └── config.yml            # Frigate config (10 cameras, go2rtc restream)
-├── mqtt/
-│   └── config/
-│       └── mosquitto.conf
-└── README.md
+  docker-compose.yml        # frigate + mosquitto services
+  config/
+    config.yml              # Frigate config (10 cameras, go2rtc restream)
+      mqtt/
+      config/
+          mosquitto.conf
+       README.md
 ```
 
 The `storage/` folder (recordings) and runtime files in `config/` (database, `.jwt_secret`, `model_cache/`) are created by Frigate on first start and are not committed.
