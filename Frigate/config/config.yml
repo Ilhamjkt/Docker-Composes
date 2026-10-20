@@ -1,14 +1,262 @@
-mqtt:
-  enabled: false
+auth:
+  enabled: true
+  reset_admin_password: true
+
+  roles:
+    Cloudc:
+      - Camera-1
+      - Camera-2
+      - Camera-3
+      - Camera-4
+      - Camera-5
+      - Camera-8
+      - Camera-9
+      - camera-10
+      - Camera-10
+mqtt: {}
+
+go2rtc:
+  rtsp:
+    listen: :8554
+  api:
+    listen: :1984
+  webrtc:
+    listen: :8556
+
+  streams:
+    Camera-1:
+      - rtsp://USERNAME:PASSWORD@CAMERA_1_IP:554/Streaming/Channels/101
+    Camera-2:
+      - rtsp://USERNAME:PASSWORD@CAMERA_2_IP:554/Streaming/Channels/101
+    Camera-3:
+      - rtsp://USERNAME:PASSWORD@CAMERA_3_IP:554/Streaming/Channels/101
+    Camera-4:
+      - rtsp://USERNAME:PASSWORD@CAMERA_4_IP:554/Streaming/Channels/101
+    Camera-5:
+      - rtsp://USERNAME:PASSWORD@CAMERA_5_IP:554/Streaming/Channels/101
+    Camera-6:
+      - rtsp://USERNAME:PASSWORD@CAMERA_6_IP:554/Streaming/Channels/101
+    Camera-7:
+      - rtsp://USERNAME:PASSWORD@CAMERA_7_IP:554/Streaming/Channels/101
+    Camera-8:
+      - rtsp://USERNAME:PASSWORD@CAMERA_8_IP:554/Streaming/Channels/101
+    Camera-9:
+      - rtsp://USERNAME:PASSWORD@CAMERA_9_IP:554/Streaming/Channels/101
+    Camera-10:
+      - rtsp://USERNAME:PASSWORD@CAMERA_10_IP:554/Streaming/Channels/101
+
+ffmpeg:
+  input_args: preset-rtsp-generic
+  output_args:
+    record: preset-record-generic-audio-copy
 
 cameras:
-  nursery:
+
+  Camera-1:
     ffmpeg:
       inputs:
-        - path: rtsp://USERNAME:PASSWORD@CAMERA_IP:554/stream
+        - path: rtsp://127.0.0.1:8554/Camera-1
+          input_args: preset-rtsp-restream
           roles:
             - detect
+            - record
     detect:
       width: 1280
       height: 720
       fps: 5
+
+    zones: {}
+    motion: {}
+    objects:
+      filters:
+        person: {}
+      track:
+        - person
+        - dining table
+    review: {}
+  Camera-2:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Camera-2
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+
+    zones:
+      visit:
+        coordinates: 
+          0.002,0.008,0.676,0.033,0.696,0.038,0.7,0.081,0.824,0.282,0.87,0.332,0.992,0.339,0.998,0.997,0.003,0.995
+        loitering_time: 0
+        objects: person
+    motion:
+      mask:
+        motion_mask_1:
+          friendly_name: Motion Mask 1
+          enabled: true
+          coordinates: 
+            0,0.013,0.686,0.041,0.695,0.086,0.863,0.335,0.987,0.344,0.993,1,0.003,0.995
+    objects:
+      filters:
+        person:
+          mask:
+            object_mask_1:
+              friendly_name: Object Mask 1 (person)
+              enabled: true
+              coordinates: 
+                0.002,0.008,0.695,0.038,0.7,0.081,0.87,0.332,0.989,0.339,0.998,0.997,0.004,0.995
+  Camera-3:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Camera-3
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+
+  Camera-4:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Camera-4
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+
+  Camera-5:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Camera-5
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+
+  Camera-6:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Camera-6
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+
+  Camera-7:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Camera-7
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+  Camera-8:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Camera-8
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+  Camera-9:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Camera-9
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+  Camera-10:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Camera-10
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+
+detect:
+  enabled: true
+
+record:
+  enabled: true
+  motion:
+    days: 30
+  alerts:
+    retain:
+      days: 30
+      mode: motion
+  detections:
+    retain:
+      days: 30
+      mode: motion
+
+camera_groups:
+  ClouDC:
+    order: 1
+    icon: LuCctv
+    cameras:
+      - Camera-1
+      - Camera-2
+      - Camera-3
+      - Camera-4
+      - Camera-5
+      - Camera-8
+      - Camera-9
+      - Camera-10
+  Raudha:
+    order: 1
+    icon: LuCctv
+    cameras:
+      - Camera-6
+      - Camera-7
+
+version: 0.18-0
+
+semantic_search:
+  enabled: false
+  model_size: small
+face_recognition:
+  enabled: false
+  model_size: small
+lpr:
+  enabled: true
+classification:
+  bird:
+    enabled: false
+

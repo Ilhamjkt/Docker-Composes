@@ -1,200 +1,81 @@
-# Frigate NVR – Docker Compose Deployment
+# Frigate NVR - Docker Compose
 
-A structured and self-contained Docker Compose setup for deploying **Frigate NVR** in a self-hosted environment.
+Setup Frigate NVR + Mosquitto (MQTT) yang dipakai di server produksi. Semua kredensial di repo ini adalah dummy, ganti sebelum dipakai.
 
-This repository focuses on clean deployment, maintainable configuration, and production-ready structure — without unnecessary complexity.
-
----
-
-## 📦 Overview
-
-Frigate is a local Network Video Recorder (NVR) designed for real-time object detection using IP cameras.
-
-This repository provides:
-- Organized Docker Compose configuration
-- Structured config directory
-- Easy customization for home or lab environments
-- Clean deployment workflow
-
----
-
-## 📁 Project Structure
+## Struktur
 
 ```
 Frigate/
-├── Docker-compose.yml
+├── docker-compose.yml        # service frigate + mosquitto
 ├── config/
-│   └── config.yml
+│   └── config.yml            # konfigurasi Frigate (10 kamera, go2rtc restream)
+├── mqtt/
+│   └── config/
+│       └── mosquitto.conf
 └── README.md
 ```
 
----
+Folder `storage/` (rekaman) dan file runtime di `config/` (database, `.jwt_secret`, `model_cache/`) dibuat otomatis oleh Frigate saat pertama jalan dan tidak di-commit.
 
-## 🚀 Requirements
+## Kebutuhan
 
-Before deployment, ensure the following are installed:
+- Docker Engine + Docker Compose v2 (`docker compose`). Panduan instalasi: [../README.md](../README.md)
+- Linux host
+- IP camera dengan RTSP (config ini memakai path Hikvision `/Streaming/Channels/101`)
+- Opsional: iGPU Intel (`/dev/dri`) untuk hwaccel. Hapus bagian `devices` di compose kalau tidak ada.
 
-- Docker Engine (latest stable recommended)
-- Docker Compose v2 plugin (`docker compose`, not the deprecated `docker-compose`)
+## Yang harus diganti
 
-See the [Docker installation guide](../README.md) for Debian, Ubuntu, RHEL/Rocky/Alma, CentOS Stream, and Fedora.
+### config/config.yml
 
-- Linux host system (recommended for stability)
-- IP Camera with RTSP stream
-
-Optional (recommended for performance):
-- NVIDIA GPU
-- Google Coral TPU
-- Other supported hardware accelerators
-
----
-
-## ⚙️ Configuration
-
-### 1️⃣ Edit Docker Compose
-
-Open:
+Di bagian `go2rtc.streams`, ganti tiap URL kamera:
 
 ```
-Docker-compose.yml
+rtsp://USERNAME:PASSWORD@CAMERA_1_IP:554/Streaming/Channels/101
 ```
 
-Adjust:
-- Port mappings
-- Storage paths
-- Environment variables
-- Shared memory size (shm_size)
+menjadi username, password, dan IP kamera masing-masing. Kalau password mengandung karakter khusus (`@`, `:`, `/`, `#`), encode dulu (misal `@` jadi `%40`).
 
-If running multiple cameras, increase shared memory accordingly.
+Sesuaikan juga sesuai kebutuhan:
+- daftar kamera di `cameras`, `camera_groups`, dan `auth.roles`
+- `detect` (resolusi/fps)
+- `record` (retensi, default 30 hari)
 
----
+`auth.reset_admin_password: true` membuat password admin di-reset setiap container restart dan password baru ditampilkan di log. Setelah login pertama dan ganti password, ubah ke `false`.
 
-### 2️⃣ Configure Cameras
+### docker-compose.yml
 
-Open:
+- `FRIGATE_RTSP_PASSWORD`: ganti dari nilai dummy
+- `shm_size`: naikkan kalau kamera banyak / resolusi tinggi
+- port: `8971` web UI (HTTPS, dengan login), `8554` RTSP restream, `8555` WebRTC. Port `5000` (tanpa auth) sengaja dimatikan.
 
-```
-config/config.yml
-```
+### mqtt/config/mosquitto.conf
 
-Define:
-- RTSP stream URLs
-- Detection resolution
-- Frames per second
-- Recording behavior
+Default `allow_anonymous true`. Kalau port 1883 terbuka ke luar jaringan lokal, aktifkan autentikasi atau jangan expose port-nya.
 
-Make sure to:
-- Replace placeholder usernames/passwords
-- Verify camera stream accessibility
-
----
-
-## ▶️ Deploy Frigate
-
-From inside the `Frigate` directory:
+## Menjalankan
 
 ```bash
+cd Frigate
+mkdir -p storage
 docker compose up -d
+docker compose logs -f frigate
 ```
 
-To monitor logs:
+Ambil password admin awal dari log, lalu buka `https://IP_SERVER:8971`.
 
-```bash
-docker compose logs -f
-```
-
-To stop the service:
-
-```bash
-docker compose down
-```
-
----
-
-## 🌐 Access Web Interface
-
-After deployment, open:
-
-```
-http://YOUR_SERVER_IP:PORT
-```
-
-Replace:
-- `YOUR_SERVER_IP` with your server address
-- `PORT` with the port defined in Docker Compose
-
----
-
-## 📊 Performance Notes
-
-- Increase `shm_size` if you experience crashes.
-- Use hardware acceleration for better detection speed.
-- Store recordings on fast storage (SSD recommended).
-- Keep your camera FPS reasonable (5–10 FPS for detection is usually sufficient).
-
----
-
-## 🔐 Environment Variables (Optional)
-
-For better security and maintainability, consider using a `.env` file:
-
-Example:
-
-```
-FRIGATE_RTSP_PASSWORD=your_password_here
-```
-
-Then reference it inside `Docker-compose.yml`.
-
----
-
-## 🛠 Troubleshooting
-
-If the container fails to start:
-
-1. Check logs:
-   ```bash
-   docker compose logs
-   ```
-2. Validate YAML indentation
-3. Confirm storage paths exist
-4. Ensure ports are not already in use
-
----
-
-## 🔄 Updating
-
-To update Frigate:
+## Update
 
 ```bash
 docker compose pull
 docker compose up -d
 ```
 
----
+Image memakai tag `stable`, jadi pull bisa menaikkan versi mayor Frigate. Backup folder `config/` sebelum update dan cek release notes Frigate untuk perubahan config.
 
-## 🤝 Contributions
+## Troubleshooting
 
-Contributions, improvements, and suggestions are welcome.
-
-If you fork this repository:
-1. Create a new branch
-2. Make changes
-3. Submit a Pull Request
-
----
-
-## 📄 License
-
-Add your preferred license (e.g., MIT License) to define usage rights and redistribution rules.
-
----
-
-## ⚠️ Disclaimer
-
-This repository provides deployment configuration only.  
-Ensure compliance with local regulations regarding camera recording and data retention.
-
----
-
-**Maintained by Ilham**
+- `docker compose logs frigate` untuk melihat error
+- Cek indentasi YAML
+- Pastikan stream kamera bisa dibuka (misal pakai VLC) dengan URL RTSP yang sama
+- Pastikan port tidak bentrok dengan service lain

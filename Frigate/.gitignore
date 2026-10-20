@@ -1,0 +1,13 @@
+# data runtime, jangan di-commit
+storage/
+mqtt/data/
+mqtt/log/
+config/*.db
+config/*.db-*
+config/.jwt_secret
+config/.*
+config/model_cache/
+config/backup_config.yaml
+config/*.lock
+config/go2rtc_homekit.yml
+.env
